@@ -1,0 +1,126 @@
+'use client';
+
+import React, { useState } from 'react';
+import Sidebar from '@/app/components/Sidebar';
+import QuestionCard from '@/app/components/QuestionCard';
+import useBlockShortcuts from '@/app/components/blockShortcuts';
+import { useTest } from '@/app/components/hooks/useTest';
+import { useTimer } from '@/app/components/hooks/useTimer';
+import { useFullscreenWarning } from '@/app/components/hooks/useFullscreenWarning';
+import Notification from '@/app/components/Notification';
+import SuccessAnimation from '@/app/components/SuccessAnimation';
+
+
+export default function QuestionPage({ params }: { params: Promise<{ testId: string }> }) {
+  const { testId } = React.use(params);
+  const { test, loading, error, selectedOptions, handleOptionChange, submitTest, isSubmitted, isSubmitting } = useTest(testId);
+  const { timeRemaining, testStatus, formatTime } = useTimer(test, submitTest);
+  const { isLocked, showWarning, warningMessage, requiresManualAction, enterFullscreen } = useFullscreenWarning(testId);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+
+  useBlockShortcuts();
+
+  if (isLocked) {
+    return (
+      <div className="flex flex-col justify-center items-center h-screen bg-gray-100 text-gray-800">
+        <div className="bg-white p-10 rounded-lg shadow-2xl text-center">
+          <h1 className="text-4xl font-bold text-red-600 mb-4">Test Locked</h1>
+          <p className="text-lg mb-8">You have been locked out for security violations.</p>
+          <p className="text-sm text-gray-600">Please contact your administrator.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const handleNext = () => {
+    if (!test) return;
+    if (currentQuestionIndex < test.questions.length - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+    }
+  };
+
+  const onClear = () => {
+    if (!test) return;
+    const currentQuestionId = test.questions[currentQuestionIndex]._id;
+  };
+
+  const handlePrev = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(currentQuestionIndex - 1);
+    }
+  };
+
+  const handleNavigate = (index: number) => {
+    setCurrentQuestionIndex(index);
+  };
+
+  if (loading) {
+    return <div className="flex justify-center items-center h-screen text-xl">Loading test...</div>;
+  }
+
+  if (error) {
+    return <div className="flex justify-center items-center h-screen text-xl text-red-500">Error: {error}</div>;
+  }
+
+  if (!test) {
+    return <div className="flex justify-center items-center h-screen text-xl">Test not found.</div>;
+  }
+
+  if (isSubmitting) {
+    return <div className="flex justify-center items-center h-screen text-xl">Submitting test...</div>; // Simple loader message
+  }
+
+  if (isSubmitted) {
+    return <SuccessAnimation />;
+  }
+
+  return (
+    <div className="flex flex-row h-screen">
+      <Sidebar
+        questions={test.questions}
+        selectedOptions={selectedOptions}
+        currentQuestion={currentQuestionIndex}
+        onNavigate={handleNavigate}
+      />
+      <div className="flex flex-col flex-1">
+        <Notification
+          message={warningMessage}
+          show={showWarning}
+          onClick={requiresManualAction ? enterFullscreen : undefined}
+          isActionable={requiresManualAction}
+        />
+        <div className="p-4 bg-gray-200 text-center font-bold">
+          {testStatus === 'upcoming' && (
+            <p className="text-yellow-600">Test starts in: {formatTime(timeRemaining)}</p>
+          )}
+          {testStatus === 'active' && (
+            <p className="text-green-600">Time remaining: {formatTime(timeRemaining)}</p>
+          )}
+          {testStatus === 'ended' && (
+            <p className="text-red-600">Test has ended.</p>
+          )}
+        </div>
+        {testStatus === 'active' ? (
+          <QuestionCard
+            question={test.questions[currentQuestionIndex]}
+            onOptionChange={(value, text) => {
+              const currentQuestion = test.questions[currentQuestionIndex];
+              handleOptionChange(currentQuestion._id, value, text); // Pass value and text as received from QuestionCard
+            }}
+            currentIndex={currentQuestionIndex}
+            onNext={handleNext}
+            selectedOption={selectedOptions[test.questions[currentQuestionIndex]._id] || ''}
+            onClear={onClear}
+            onSubmit={submitTest}
+            onPrev={handlePrev}
+            totalQuestions={test.questions.length}
+          />
+        ) : (
+          <div className="flex flex-1 justify-center items-center text-2xl text-gray-700">
+            {testStatus === 'upcoming' ? 'The test has not started yet.' : 'The test has ended.'}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
