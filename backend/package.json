@@ -2,10 +2,10 @@
   "name": "gate-portal-backend",
   "version": "1.0.0",
   "description": "Backend for the GATE Portal",
-  "main": "dist/server.js",
+  "main": "src/server.ts",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/server.js",
+    "start": "ts-node src/server.ts",
     "dev": "nodemon --watch src/**/*.ts --exec ts-node src/server.ts"
   },
   "keywords": [],
