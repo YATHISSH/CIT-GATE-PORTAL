@@ -1,0 +1,22 @@
+name: gate-portal-blueprint
+
+services:
+  - type: web
+    name: gate-portal-backend
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /
+    autoDeploy: true
+    plan: free
+    envVars:
+      - key: PORT
+        value: "5000"
+      - key: MONGO_URI
+        value: "mongodb+srv://yathissh:YATHISSH7777@yathissh.okdysxi.mongodb.net/gate_portal"
+      - key: JWT_SECRET
+        value: "ytb_123"
+      - key: DEFAULT_TEACHER_PASSWORD
+        value: "cse_gate@123"
+      - key: DEFAULT_TEACHER_EMAIL
+        value: "cit_cse_gate@citchennai.net"
