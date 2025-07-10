@@ -18,6 +18,7 @@ const departments = [
   'IT',
   'AIDS',
   'AIML',
+  'BME',
   'CS',
   'CSBS',
   'ECE',

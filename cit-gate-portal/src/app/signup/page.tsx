@@ -18,18 +18,18 @@ export default function Signup() {
   const router = useRouter();
 
   const departments = [
-    "Computer Science and Engineering",
-    "Information Technology",
-    "Electronics and Communication Engineering",
-    "Electrical and Electronics Engineering",
-    "Mechanical Engineering",
-    "Civil Engineering",
-    "Chemical Engineering",
-    "Biotechnology",
-    "Aeronautical Engineering",
-    "Automobile Engineering"
-  ];
-
+  "Computer Science and Engineering",
+  "Information Technology",
+  "Artificial Intelligence and Data Science",
+  "Artificial Intelligence and Machine Learning",
+  "Bio Medical Engineering",
+  "Computer Science and Business Systems",
+  "Cyber Security",
+  "Electronics and Communication Engineering",
+  "Electrical and Electronics Engineering",
+  "Mechatronics Engineering",
+  "Mechanical Engineering"
+];
   
 
   const validateEmail = (email: string) => {
