@@ -22,7 +22,7 @@ export const useFullscreenWarning = (testId: string) => {
     const initialVisibilityCount = savedVisibilityCount ? parseInt(savedVisibilityCount, 10) : 0;
     setVisibilityWarningCount(initialVisibilityCount);
 
-    if (initialFullscreenCount >= 3 || initialVisibilityCount >= 2) {
+    if (initialFullscreenCount >= 1 || initialVisibilityCount >= 1) {
       setIsLocked(true);
     }
   }, [getFullscreenLocalStorageKey, getVisibilityLocalStorageKey]);
@@ -33,7 +33,7 @@ export const useFullscreenWarning = (testId: string) => {
       document.documentElement.requestFullscreen().catch((err) => {
         if (err.name === 'NotAllowedError') {
           setRequiresManualAction(true);
-          setWarningMessage('Please click here to re-enter fullscreen mode.');
+          setWarningMessage('You must be in fullscreen to continue the test. Click here to re-enter.');
           setShowWarning(true);
         } else {
           console.error('Error attempting to enable full-screen mode:', err.message, `(${err.name})`);
@@ -49,20 +49,18 @@ export const useFullscreenWarning = (testId: string) => {
         setWarningCount(newCount);
         localStorage.setItem(getFullscreenLocalStorageKey(), newCount.toString());
 
-        if (newCount === 1) {
-          setWarningMessage('Warning: Fullscreen exit detected. Re-engaging. This is your 1st warning.');
-        } else if (newCount === 2) {
-          setWarningMessage('FINAL WARNING: Fullscreen exit detected. Re-engaging. One more violation will lock the test.');
-        } else if (newCount >= 3) {
+        if (newCount >= 1) {
           setWarningMessage('TEST LOCKED: You have exited fullscreen mode multiple times.');
           setIsLocked(true);
+        } else {
+          setWarningMessage('You must be in fullscreen to continue. Click to re-enter.');
+          setRequiresManualAction(true); // Force user action
         }
 
         setShowWarning(true);
-        if (newCount < 3) {
-          enterFullscreen(); // Force re-entry immediately
-          setTimeout(() => setShowWarning(false), 5000);
-        }  
+      } else if (document.fullscreenElement) {
+        setShowWarning(false);
+        setRequiresManualAction(false);
       }
     };
 
@@ -82,13 +80,13 @@ export const useFullscreenWarning = (testId: string) => {
 
         if (newCount === 1) {
           setWarningMessage('Warning: You have switched tabs. This is your 1st and final warning.');
-        } else if (newCount >= 2) {
+        } else if (newCount >= 1) {
           setWarningMessage('TEST LOCKED: You have switched tabs multiple times.');
           setIsLocked(true);
         }
 
         setShowWarning(true);
-        if (newCount < 2) {
+        if (newCount < 1) {
           setTimeout(() => setShowWarning(false), 5000);
         }
       }

@@ -1,6 +1,6 @@
 'use client'
 import { useState, useCallback, useEffect } from 'react';
-
+import SuccessAnimation from '@/app/components/TeacherSuccessAnimation';
 import { useRouter } from 'next/navigation';
 
 interface Question {
@@ -85,6 +85,7 @@ export default function TestCreator() {
 
     const [formError, setformError] = useState("");
     const [showPopup, setShowPopup] = useState(false);
+    const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
     const router = useRouter();
 
 
@@ -312,7 +313,6 @@ export default function TestCreator() {
           )
         }));
       };
-
     // Save test (placeholder function)
     const handleSaveTest = async () => {
       const formErrorMessage2 = validateForm();
@@ -336,7 +336,7 @@ export default function TestCreator() {
                 throw new Error(data.error || "Failed to save test");
             }
 
-            alert("Test saved successfully!");
+            setShowSuccessAnimation(true);
             console.log("Saved test:", data.test);
 
             localStorage.removeItem("testForm");
@@ -374,6 +374,10 @@ export default function TestCreator() {
     useEffect(() => {
         localStorage.setItem('testForm', JSON.stringify(testForm));
     }, [testForm]);
+
+    if (showSuccessAnimation) {
+        return <SuccessAnimation />;
+    }
 
     return (
     <div className="min-h-screen bg-gray-50 py-8">

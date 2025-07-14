@@ -22,6 +22,7 @@ export default function Page() {
     const [error, setError] = useState<string | null>(null);
     const [currentTime, setCurrentTime] = useState(new Date());
     const [upcomingTests, setUpcomingTests] = useState<Test[]>([]);
+    const [takenTests, setTakenTests] = useState<string[]>([]);
 
     useEffect(() => {
         const timer = setInterval(() => {
@@ -53,6 +54,24 @@ export default function Page() {
 
         fetchScheduledTests();
     }, []);
+
+    useEffect(() => {
+        const storedTakenTests = localStorage.getItem('takenTests');
+        if (storedTakenTests) {
+            setTakenTests(JSON.parse(storedTakenTests));
+        }
+    }, []);
+
+    const handleTakeTest = (testId: string) => {
+        const updatedTakenTests = [...takenTests, testId];
+        setTakenTests(updatedTakenTests);
+        localStorage.setItem('takenTests', JSON.stringify(updatedTakenTests));
+        // Instead of navigating directly to the test page
+        // router.push(`/student/take-test/${testId}`);
+        
+        // Navigate to the instruction page first
+        router.push(`/student/take-test/${testId}/instructions`);
+    };
 
     const activeTests = scheduledTests.filter(test => {
         const testStartTime = new Date(test.startTime);
@@ -97,10 +116,15 @@ export default function Page() {
                                 <p className="text-gray-600 text-sm mb-1">Start Time: {new Date(test.startTime).toLocaleString()}</p>
                                 <p className="text-gray-600 text-sm mb-4">End Time: {new Date(test.endTime).toLocaleString()}</p>
                                 <button
-                                    onClick={() => router.push(`/student/take-test/${test._id}`)}
-                                    className="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300"
+                                    onClick={() => handleTakeTest(test._id)}
+                                    disabled={takenTests.includes(test._id)}
+                                    className={`mt-4 w-full font-bold py-2 px-4 rounded-lg transition-colors duration-300 ${
+                                        takenTests.includes(test._id)
+                                            ? 'bg-red-600 cursor-not-allowed'
+                                            : 'bg-blue-500 hover:bg-blue-600 text-white'
+                                    }`}
                                 >
-                                    Take Test
+                                    {takenTests.includes(test._id) ? 'Test Taken' : 'Take Test'}
                                 </button>
                             </div>
                         ))
