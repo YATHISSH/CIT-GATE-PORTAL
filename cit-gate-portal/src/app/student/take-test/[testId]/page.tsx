@@ -32,7 +32,7 @@ export default function QuestionPage({ params }: { params: Promise<{ testId: str
   const { testId } = React.use(params);
   const { test, loading, error, selectedOptions, handleOptionChange, submitTest, isSubmitted, isSubmitting } = useTest(testId);
   const { timeRemaining, testStatus, formatTime } = useTimer(test, submitTest);
-  const { isLocked, showWarning, warningMessage, requiresManualAction, enterFullscreen } = useFullscreenWarning(testId);
+  const { isLocked, enterFullscreen } = useFullscreenWarning(testId);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
   // Hook to block keyboard shortcuts like Ctrl+C, Alt+Tab, etc.
@@ -54,12 +54,12 @@ export default function QuestionPage({ params }: { params: Promise<{ testId: str
           <h1 className="mt-6 text-5xl font-extrabold text-white [text-shadow:_0_2px_4px_rgb(0_0_0_/_40%)]">
             Test Locked
           </h1>
-          <p className="mt-4 max-w-lg text-lg text-slate-300">
+          <p className="mt-4 max-w-lg text-lg text-red-500 italic ">
             Access to this test has been revoked due to a security violation, such as exiting fullscreen or switching tabs.
           </p>
           <div className="mt-8 rounded-lg border border-slate-700 bg-slate-800/50 p-4">
-            <p className="font-medium text-slate-300">
-              Please contact your Department Coordinator for assistance.
+            <p className="font-bold italic  text-green-700">
+              Please inform your department coordinator — you can no longer proceed with the test.
             </p>
           </div>
         </div>
@@ -114,8 +114,6 @@ export default function QuestionPage({ params }: { params: Promise<{ testId: str
   const handleNavigate = (index: number) => {
     setCurrentQuestionIndex(index);
   };
-
-
   // --- Main Test Interface ---
   return (
     <div className="flex flex-row h-screen bg-gray-50">
@@ -126,50 +124,25 @@ export default function QuestionPage({ params }: { params: Promise<{ testId: str
         onNavigate={handleNavigate}
       />
       <div className="flex flex-col flex-1">
-        <Notification
-          message={warningMessage}
-          show={showWarning}
-          onClick={requiresManualAction ? enterFullscreen : undefined}
-          isActionable={requiresManualAction}
-        />
-        {showWarning && requiresManualAction ? (
-          <div className="flex flex-1 justify-center items-center text-2xl text-gray-700">
-            You must be in fullscreen to continue.
-          </div>
+        {testStatus === 'active' ? (
+          <QuestionCard
+            question={test.questions[currentQuestionIndex]}
+            onOptionChange={(value, text) => {
+              const currentQuestion = test.questions[currentQuestionIndex];
+              handleOptionChange(currentQuestion._id, value, text);
+            }}
+            currentIndex={currentQuestionIndex}
+            onNext={handleNext}
+            selectedOption={selectedOptions[test.questions[currentQuestionIndex]._id] || ''}
+            onClear={onClear}
+            onSubmit={submitTest}
+            onPrev={handlePrev}
+            totalQuestions={test.questions.length}
+          />
         ) : (
-          <>
-            <div className="p-4 bg-white shadow-md text-center font-bold">
-              {testStatus === 'upcoming' && (
-                <p className="text-yellow-600">Test starts in: {formatTime(timeRemaining)}</p>
-              )}
-              {testStatus === 'active' && (
-                <p className="text-green-600">Time remaining: {formatTime(timeRemaining)}</p>
-              )}
-              {testStatus === 'ended' && (
-                <p className="text-red-600">Test has ended.</p>
-              )}
-            </div>
-            {testStatus === 'active' ? (
-              <QuestionCard
-                question={test.questions[currentQuestionIndex]}
-                onOptionChange={(value, text) => {
-                  const currentQuestion = test.questions[currentQuestionIndex];
-                  handleOptionChange(currentQuestion._id, value, text);
-                }}
-                currentIndex={currentQuestionIndex}
-                onNext={handleNext}
-                selectedOption={selectedOptions[test.questions[currentQuestionIndex]._id] || ''}
-                onClear={onClear}
-                onSubmit={submitTest}
-                onPrev={handlePrev}
-                totalQuestions={test.questions.length}
-              />
-            ) : (
-              <div className="flex flex-1 justify-center items-center text-2xl text-gray-700">
-                {testStatus === 'upcoming' ? 'The test has not started yet.' : 'The test has ended.'}
-              </div>
-            )}
-          </>
+          <div className="flex flex-1 justify-center items-center text-2xl text-gray-700">
+            {testStatus === 'upcoming' ? 'The test has not started yet.' : 'The test has ended.'}
+          </div>
         )}
       </div>
     </div>

@@ -1,12 +1,9 @@
 'use client';
-
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './SuccessAnimation.module.css';
-
 const SuccessAnimation = () => {
   const router = useRouter();
-
   useEffect(() => {
     const timer = setTimeout(() => {
       router.push('/student/dashboard');
@@ -38,9 +35,9 @@ const SuccessAnimation = () => {
         </svg>
 
         <p className={styles.successMessage}>Test Submitted Successfully!</p>
-        <p className={styles.redirectMessage}>
-          You will be automatically redirected to Dashboard in 5 seconds...
-        </p>
+       <p className={styles.redirectMessage}> 
+  You will be automatically redirected to <span style={{ color: '#007bff', fontStyle: 'normal' }}>Dashboard</span> in 5 seconds...
+</p>
       </div>
     </div>
   );

@@ -4,13 +4,13 @@ import { useState } from "react";
 
 export default function Login() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState(""); // This will be DOB for students
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [emailError, setEmailError] = useState("");
-  const [passwordError, setPasswordError] = useState(""); // DOB error for students
-  const [role, setRole] = useState<'student' | 'teacher'>('student'); // Default to student
-  const [showPassword, setShowPassword] = useState(false); // For teacher password visibility
+  const [passwordError, setPasswordError] = useState("");
+  const [role, setRole] = useState<'student' | 'teacher'>('student');
+  const [showPassword, setShowPassword] = useState(false);
 
   const router = useRouter();
 
@@ -44,9 +44,8 @@ export default function Login() {
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+    let value = e.target.value.replace(/\D/g, '');
     
-    // Add slashes automatically
     if (value.length >= 2) {
       value = value.substring(0, 2) + '/' + value.substring(2);
     }
@@ -54,7 +53,6 @@ export default function Login() {
       value = value.substring(0, 5) + '/' + value.substring(5);
     }
     
-    // Limit to 10 characters (DD/MM/YYYY)
     if (value.length > 10) {
       value = value.substring(0, 10);
     }
@@ -73,12 +71,11 @@ export default function Login() {
     setError("");
 
     if (role === 'student') {
-      // Student Login Logic
       if (!validateEmail(email)) {
         setIsLoading(false);
         return;
       }
-      if (!validatePassword(password)) { // password is DOB for student
+      if (!validatePassword(password)) {
         setIsLoading(false);
         return;
       }
@@ -98,7 +95,7 @@ export default function Login() {
           localStorage.setItem('token', data.token);
           localStorage.setItem('currentUser', JSON.stringify(data.user));
         }
-        router.push("/student"); // Redirect to student dashboard
+        router.push("/student");
       } catch (err) {
         console.error('Student login error:', err);
         setError("An error occurred. Please try again.");
@@ -106,8 +103,6 @@ export default function Login() {
         setIsLoading(false);
       }
     } else {
-      // Teacher Login Logic (to be implemented more thoroughly)
-      // For now, a basic structure, assuming direct email/password for teachers
       try {
         const response = await fetch('/api/auth/teacher/login', {
           method: 'POST',
@@ -124,7 +119,7 @@ export default function Login() {
           localStorage.setItem('token', data.token);
           localStorage.setItem('currentUser', JSON.stringify(data.user));
         }
-        router.push("/teacher"); // Redirect to teacher dashboard
+        router.push("/teacher");
       } catch (err) {
         console.error('Teacher login error:', err);
         setError("An error occurred. Please try again.");
@@ -136,132 +131,596 @@ export default function Login() {
 
   const hasErrors = emailError !== "" || passwordError !== "";
 
+  // Dynamic theme colors based on role
+  const themeColors = role === 'student' 
+    ? {
+        primary: '#22c55e',
+        primaryHover: '#16a34a',
+        primaryLight: '#dcfce7',
+        accent: '#4ade80',
+        gradient: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+        spotlight: 'radial-gradient(ellipse 80% 80% at 50% -20%, rgba(34, 197, 94, 0.3), rgba(15, 23, 42, 0))',
+        shadow: 'rgba(34, 197, 94, 0.3)'
+      }
+    : {
+        primary: '#3b82f6',
+        primaryHover: '#2563eb',
+        primaryLight: '#dbeafe',
+        accent: '#60a5fa',
+        gradient: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)',
+        spotlight: 'radial-gradient(ellipse 80% 80% at 50% -20%, rgba(59, 130, 246, 0.3), rgba(15, 23, 42, 0))',
+        shadow: 'rgba(59, 130, 246, 0.3)'
+      };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            {role === 'student' ? 'Student Login' : 'Teacher Login'}
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            {role === 'student' ? 'Use your college email and date of birth (DD/MM/YYYY)' : 'Use your provided credentials'}
-          </p>
-          <div className="flex justify-center space-x-4 my-4">
-            <button 
-              onClick={() => setRole('student')}
-              className={`px-4 py-2 rounded-md text-sm font-medium ${role === 'student' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}>
-              Student
-            </button>
-            <button 
-              onClick={() => setRole('teacher')}
-              className={`px-4 py-2 rounded-md text-sm font-medium ${role === 'teacher' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}>
-              Teacher
-            </button>
-          </div>
-        </div>
+    <>
+      <style jsx>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
         
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-              {error}
-            </div>
-          )}
+        .login-container {
+          min-height: 100vh;
+          background: #0f172a;
+          background-image: ${themeColors.spotlight};
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 3rem 1rem;
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .animated-background {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: ${themeColors.spotlight};
+          animation: pulse-bg 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse-bg {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.8; }
+        }
+
+        .login-card {
+          position: relative;
+          z-index: 10;
+          width: 100%;
+          max-width: 500px;
+          background: rgba(30, 41, 59, 0.8);
+          backdrop-filter: blur(20px);
+          border-radius: 24px;
+          box-shadow: 
+            0 25px 50px -12px rgba(0, 0, 0, 0.4),
+            0 0 0 1px rgba(148, 163, 184, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+          padding: 3rem;
+          transform: translateY(0);
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .login-card:hover {
+          transform: translateY(-8px);
+          box-shadow: 
+            0 35px 70px -12px rgba(0, 0, 0, 0.5),
+            0 0 0 1px rgba(148, 163, 184, 0.2),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .logo-container {
+          width: 80px;
+          height: 80px;
+          background: ${themeColors.gradient};
+          border-radius: 20px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto 2rem auto;
+          box-shadow: 0 20px 40px ${themeColors.shadow};
+          position: relative;
+          overflow: hidden;
+        }
+
+        .logo-container::before {
+          content: '';
+          position: absolute;
+          top: -50%;
+          left: -50%;
+          width: 200%;
+          height: 200%;
+          background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+          transform: rotate(45deg);
+          animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+          0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+          50% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+          100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        .logo-icon {
+          width: 40px;
+          height: 40px;
+          color: white;
+          position: relative;
+          z-index: 2;
+        }
+
+        .title {
+          font-size: 2.5rem;
+          font-weight: 800;
+          color: white;
+          text-align: center;
+          margin-bottom: 0.5rem;
+          background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+          font-size: 1.125rem;
+          color: #cbd5e1;
+          text-align: center;
+          margin-bottom: 2rem;
+          font-weight: 500;
+        }
+
+        .role-toggle {
+          display: flex;
+          justify-content: center;
+          gap: 8px;
+          margin: 2rem 0;
+          padding: 6px;
+          background: rgba(51, 65, 85, 0.6);
+          border-radius: 16px;
+          backdrop-filter: blur(10px);
+        }
+
+        .role-button {
+          padding: 12px 24px;
+          border-radius: 12px;
+          font-size: 0.875rem;
+          font-weight: 600;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          border: none;
+          cursor: pointer;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .role-button.active {
+          background: ${themeColors.gradient};
+          color: white;
+          box-shadow: 0 8px 25px ${themeColors.shadow};
+          transform: translateY(-2px);
+        }
+
+        .role-button.inactive {
+          background: transparent;
+          color: #cbd5e1;
+        }
+
+        .role-button.inactive:hover {
+          background: rgba(51, 65, 85, 0.8);
+          color: white;
+          transform: translateY(-1px);
+        }
+
+        .form-group {
+          margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+          display: block;
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: #e2e8f0;
+          margin-bottom: 8px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .input-container {
+          position: relative;
+        }
+
+        .input-icon {
+          position: absolute;
+          left: 16px;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 20px;
+          height: 20px;
+          color: #64748b;
+          pointer-events: none;
+          transition: color 0.3s ease;
+        }
+
+        .form-input {
+          width: 100%;
+          padding: 16px 16px 16px 48px;
+          background: rgba(51, 65, 85, 0.5);
+          border: 2px solid #475569;
+          border-radius: 12px;
+          color: white;
+          font-size: 1rem;
+          font-weight: 500;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          backdrop-filter: blur(10px);
+        }
+
+        .form-input:focus {
+          outline: none;
+          border-color: ${themeColors.primary};
+          box-shadow: 0 0 0 4px ${themeColors.shadow};
+          background: rgba(51, 65, 85, 0.8);
+        }
+
+        .form-input:focus + .input-icon {
+          color: ${themeColors.primary};
+        }
+
+        .form-input.error {
+          border-color: #ef4444;
+          box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);
+        }
+
+        .form-input::placeholder {
+          color: #64748b;
+          font-weight: 400;
+        }
+
+        .password-toggle {
+          position: absolute;
+          right: 16px;
+          top: 50%;
+          transform: translateY(-50%);
+          background: none;
+          border: none;
+          color: #64748b;
+          cursor: pointer;
+          padding: 4px;
+          border-radius: 6px;
+          transition: all 0.3s ease;
+        }
+
+        .password-toggle:hover {
+          color: ${themeColors.primary};
+          background: rgba(51, 65, 85, 0.5);
+        }
+
+        .error-message {
+          display: flex;
+          align-items: center;
+          margin-top: 8px;
+          color: #fca5a5;
+          font-size: 0.875rem;
+          font-weight: 500;
+        }
+
+        .error-icon {
+          width: 16px;
+          height: 16px;
+          margin-right: 6px;
+        }
+
+        .help-text {
+          margin-top: 6px;
+          color: #94a3b8;
+          font-size: 0.75rem;
+          font-weight: 400;
+        }
+
+        .submit-button {
+          width: 100%;
+          padding: 16px;
+          background: ${themeColors.gradient};
+          border: none;
+          border-radius: 12px;
+          color: white;
+          font-size: 1rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          box-shadow: 0 10px 25px ${themeColors.shadow};
+          position: relative;
+          overflow: hidden;
+        }
+
+        .submit-button:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 15px 35px ${themeColors.shadow};
+        }
+
+        .submit-button:active:not(:disabled) {
+          transform: translateY(0);
+        }
+
+        .submit-button:disabled {
+          background: #475569;
+          cursor: not-allowed;
+          box-shadow: none;
+          opacity: 0.7;
+        }
+
+        .button-content {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+        }
+
+        .loading-spinner {
+          width: 20px;
+          height: 20px;
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          border-top: 2px solid white;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+
+        .footer {
+          text-align: center;
+          padding-top: 2rem;
+          border-top: 1px solid #475569;
+          margin-top: 2rem;
+        }
+
+        .footer-text {
+          color: #94a3b8;
+          font-size: 0.875rem;
+          font-weight: 400;
+        }
+
+        .footer-link {
+          color: ${themeColors.primary};
+          font-weight: 600;
+          text-decoration: none;
+          transition: color 0.3s ease;
+          background: none;
+          border: none;
+          cursor: pointer;
+        }
+
+        .footer-link:hover {
+          color: ${themeColors.primaryHover};
+          text-decoration: underline;
+        }
+
+        .error-alert {
+          background: rgba(127, 29, 29, 0.5);
+          border: 1px solid #dc2626;
+          color: #fca5a5;
+          padding: 16px;
+          border-radius: 12px;
+          margin-bottom: 1.5rem;
+          backdrop-filter: blur(10px);
+        }
+
+        .alert-content {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .alert-icon {
+          width: 20px;
+          height: 20px;
+          flex-shrink: 0;
+        }
+
+        @media (max-width: 640px) {
+          .login-card {
+            max-width: 100%;
+            margin: 1rem;
+            padding: 2rem;
+          }
           
-          <div className="space-y-4">
-            {/* Email */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                College Email
+          .title {
+            font-size: 2rem;
+          }
+          
+          .logo-container {
+            width: 64px;
+            height: 64px;
+          }
+          
+          .logo-icon {
+            width: 32px;
+            height: 32px;
+          }
+        }
+      `}</style>
+
+      <div className="login-container">
+        <div className="animated-background"></div>
+        
+        <div className="login-card">
+          {/* Header Section */}
+          <div>
+            {/* Logo/Icon */}
+            <div className="logo-container">
+              <svg className="logo-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </div>
+            
+            <h1 className="title">
+              {role === 'student' ? 'Student Portal' : 'Faculty Portal'}
+            </h1>
+            <p className="subtitle">
+              {role === 'student' ? ' Login →  Attempt →  Achieve' : 'Create, monitor, and evaluate assessments '}
+            </p>
+            
+            {/* Role Toggle */}
+            <div className="role-toggle">
+              <button 
+                onClick={() => setRole('student')}
+                className={`role-button ${role === 'student' ? 'active' : 'inactive'}`}
+              >
+                Student
+              </button>
+              <button 
+                onClick={() => setRole('teacher')}
+                className={`role-button ${role === 'teacher' ? 'active' : 'inactive'}`}
+              >
+                Faculty
+              </button>
+            </div>
+          </div>
+
+          {/* Form Section */}
+          <form onSubmit={handleSubmit}>
+            {/* Error Display */}
+            {error && (
+              <div className="error-alert">
+                <div className="alert-content">
+                  <svg className="alert-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>{error}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Email Input */}
+            <div className="form-group">
+              <label htmlFor="email" className="form-label">
+                Institutional Email
               </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
-                  emailError ? 'border-red-500' : 'border-gray-300'
-                } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
-                placeholder="yourname@citchennai.net"
-                value={email}
-                onChange={handleEmailChange}
-              />
+              <div className="input-container">
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  className={`form-input ${emailError ? 'error' : ''}`}
+                  placeholder="yourname@citchennai.net"
+                  value={email}
+                  onChange={handleEmailChange}
+                />
+                <svg className="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                </svg>
+              </div>
               {emailError && (
-                <p className="mt-1 text-sm text-red-600">{emailError}</p>
+                <div className="error-message">
+                  <svg className="error-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {emailError}
+                </div>
               )}
             </div>
 
-            {/* Password (Date of Birth) */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                {role === 'student' ? 'Password (Date of Birth)' : 'Password'}
+            {/* Password Input */}
+            <div className="form-group">
+              <label htmlFor="password" className="form-label">
+                {role === 'student' ? 'Date of Birth' : 'Access Code'}
               </label>
-              <div className="relative mt-1">
+              <div className="input-container">
                 <input
                   id="password"
                   name="password"
                   type={role === 'student' ? "text" : (showPassword ? "text" : "password")}
                   required
-                  className={`appearance-none block w-full px-3 py-2 border ${
-                  passwordError ? 'border-red-500' : 'border-gray-300'
-                } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
-                placeholder={role === 'student' ? "DD/MM/YYYY" : "Enter your password"}
-                value={password}
-                onChange={role === 'student' ? handlePasswordChange : (e) => setPassword(e.target.value)}
-                maxLength={role === 'student' ? 10 : undefined}
+                  className={`form-input ${passwordError ? 'error' : ''}`}
+                  placeholder={role === 'student' ? "DD/MM/YYYY" : "Enter your access code"}
+                  value={password}
+                  onChange={role === 'student' ? handlePasswordChange : (e) => setPassword(e.target.value)}
+                  maxLength={role === 'student' ? 10 : undefined}
+                  style={{ paddingRight: role === 'teacher' ? '48px' : '16px' }}
                 />
+                <svg className="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={role === 'student' ? "M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4m4 0v10a2 2 0 01-2 2H6a2 2 0 01-2-2V7a2 2 0 012-2h12a2 2 0 012 2z" : "M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"} />
+                </svg>
                 {role === 'teacher' && (
-                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5">
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="text-gray-500 hover:text-gray-700 focus:outline-none"
-                      aria-label={showPassword ? "Hide password" : "Show password"}
-                    >
-                      {showPassword ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
-                        </svg>
-                      ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                      )}
-                    </button>
-                  </div>
-                )}
+  <button
+    type="button"
+    onClick={() => setShowPassword(!showPassword)}
+    className="password-toggle"
+    aria-label={showPassword ? "Hide password" : "Show password"}
+  >
+    {showPassword ? (
+      // Password is VISIBLE - show open eye icon
+      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+      </svg>
+    ) : (
+      // Password is HIDDEN - show closed/crossed eye icon (INITIAL STATE)
+      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+      </svg>
+    )}
+  </button>
+)}
+
+             
               </div>
               {passwordError && role === 'student' && (
-                <p className="mt-1 text-sm text-red-600">{passwordError}</p>
+                <div className="error-message">
+                  <svg className="error-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {passwordError}
+                </div>
               )}
-              {role === 'student' && <p className="mt-1 text-xs text-gray-500">Enter your date of birth as registered</p>}
+              {role === 'student' && (
+                <div className="help-text">
+                  Enter your registered date of birth (DD/MM/YYYY format)
+                </div>
+              )}
             </div>
-          </div>
 
-          <div>
+            {/* Submit Button */}
             <button
               type="submit"
               disabled={isLoading || hasErrors}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="submit-button"
             >
-              {isLoading ? "Signing in..." : "Sign in"}
+              {isLoading ? (
+                <div className="button-content">
+                  <div className="loading-spinner"></div>
+                  <span>Authenticating...</span>
+                </div>
+              ) : (
+                <div className="button-content">
+                  <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                  </svg>
+                  <span>Access {role === 'student' ? 'Student' : 'Faculty'} Portal</span>
+                </div>
+              )}
             </button>
-          </div>
-          
-          <div className="text-center">
-            <p className="text-sm text-gray-600">
-              Don't have an account?{" "}
-              <button
-                type="button"
-                onClick={() => router.push("/signup")}
-                className="font-medium text-indigo-600 hover:text-indigo-500"
-              >
-                Create one here
-              </button>
-            </p>
-          </div>
-        </form>
+
+            {/* Footer */}
+            <div className="footer">
+              <p className="footer-text">
+                Need an account?{" "}
+                <button
+                  type="button"
+                  onClick={() => router.push("/signup")}
+                  className="footer-link"
+                >
+                  Register here
+                </button>
+              </p>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
