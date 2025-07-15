@@ -27,7 +27,6 @@ const LockIcon = () => (
   </svg>
 );
 
-
 export default function QuestionPage({ params }: { params: Promise<{ testId: string }> }) {
   const { testId } = React.use(params);
   const { test, loading, error, selectedOptions, handleOptionChange, submitTest, isSubmitted, isSubmitting } = useTest(testId);
@@ -67,30 +66,6 @@ export default function QuestionPage({ params }: { params: Promise<{ testId: str
     );
   }
 
-  // --- Standard Loading and Error States ---
-  if (loading) {
-    return <div className="flex justify-center items-center h-screen text-xl">Loading test...</div>;
-  }
-
-  if (error) {
-    return <div className="flex justify-center items-center h-screen text-xl text-red-500">Error: {error}</div>;
-  }
-
-  if (!test) {
-    return <div className="flex justify-center items-center h-screen text-xl">Test not found.</div>;
-  }
-
-  // --- Submission States ---
-  if (isSubmitting) {
-    return <div className="flex justify-center items-center h-screen text-xl">Submitting test...</div>;
-  }
-
-  if (isSubmitted) {
-    return <SuccessAnimation />;
-  }
-
-
-  // --- Event Handlers for Navigation ---
   const handleNext = () => {
     if (!test) return;
     if (currentQuestionIndex < test.questions.length - 1) {
@@ -114,6 +89,29 @@ export default function QuestionPage({ params }: { params: Promise<{ testId: str
   const handleNavigate = (index: number) => {
     setCurrentQuestionIndex(index);
   };
+
+  // --- Standard Loading and Error States ---
+  if (loading) {
+    return <div className="flex justify-center items-center h-screen text-xl">Loading test...</div>;
+  }
+
+  if (error) {
+    return <div className="flex justify-center items-center h-screen text-xl text-red-500">Error: {error}</div>;
+  }
+
+  if (!test) {
+    return <div className="flex justify-center items-center h-screen text-xl">Test not found.</div>;
+  }
+
+  // --- Submission States ---
+  if (isSubmitting) {
+    return <div className="flex justify-center items-center h-screen text-xl">Submitting test...</div>;
+  }
+
+  if (isSubmitted) {
+    return <SuccessAnimation />;
+  }
+
   // --- Main Test Interface ---
   return (
     <div className="flex flex-row h-screen bg-gray-50">
@@ -124,12 +122,26 @@ export default function QuestionPage({ params }: { params: Promise<{ testId: str
         onNavigate={handleNavigate}
       />
       <div className="flex flex-col flex-1">
+        {/* Timer Bar - Always visible */}
+        <div className="p-4 bg-gray-200 text-center font-bold">
+          {testStatus === 'upcoming' && (
+            <p className="text-yellow-600">Test starts in: {formatTime(timeRemaining)}</p>
+          )}
+          {testStatus === 'active' && (
+            <p className="text-green-600">Time remaining: {formatTime(timeRemaining)}</p>
+          )}
+          {testStatus === 'ended' && (
+            <p className="text-red-600">Test has ended.</p>
+          )}
+        </div>
+        
+        {/* Content Area */}
         {testStatus === 'active' ? (
           <QuestionCard
             question={test.questions[currentQuestionIndex]}
             onOptionChange={(value, text) => {
               const currentQuestion = test.questions[currentQuestionIndex];
-              handleOptionChange(currentQuestion._id, value, text);
+              handleOptionChange(currentQuestion._id, value, text); // Pass value and text as received from QuestionCard
             }}
             currentIndex={currentQuestionIndex}
             onNext={handleNext}
