@@ -11,11 +11,10 @@ import Notification from '@/app/components/Notification';
 import SuccessAnimation from '@/app/components/SuccessAnimation';
 
 // --- Icon Component for the Locked Screen ---
-// A self-contained SVG for easy integration.
 const LockIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    className="h-24 w-24 text-red-500" // A large, intimidating icon
+    className="h-24 w-24 text-red-500"
     viewBox="0 0 20 20"
     fill="currentColor"
   >
@@ -29,7 +28,7 @@ const LockIcon = () => (
 
 export default function QuestionPage({ params }: { params: Promise<{ testId: string }> }) {
   const { testId } = React.use(params);
-  const { test, loading, error, selectedOptions, handleOptionChange, submitTest, isSubmitted, isSubmitting } = useTest(testId);
+  const { test, loading, error, selectedOptions, handleOptionChange, submitTest, isSubmitted, isSubmitting, submissionResult } = useTest(testId);
   const { timeRemaining, testStatus, formatTime } = useTimer(test, submitTest);
   const { isLocked, enterFullscreen } = useFullscreenWarning(testId);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -37,27 +36,27 @@ export default function QuestionPage({ params }: { params: Promise<{ testId: str
   // Hook to block keyboard shortcuts like Ctrl+C, Alt+Tab, etc.
   useBlockShortcuts();
 
+  // Debug logging
+  console.log('Current selectedOptions in QuestionPage:', selectedOptions);
+  console.log('Current question index:', currentQuestionIndex);
+  console.log('Test data:', test);
+
   // --- Enhanced "Test Locked" Screen ---
-  // This block renders when the useFullscreenWarning hook sets isLocked to true.
   if (isLocked) {
     return (
-      // A dark, atmospheric background with a "spotlight" effect to create a serious tone.
       <div className="flex h-screen w-full items-center justify-center bg-slate-900 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(220,38,38,0.3),rgba(255,255,255,0))]">
         <div className="flex flex-col items-center text-center">
-          {/* A pulsing animation draws attention to the lock icon. */}
           <div className="animate-pulse">
             <LockIcon />
           </div>
-
-          {/* Typography is enhanced with text shadows for better contrast and impact. */}
           <h1 className="mt-6 text-5xl font-extrabold text-white [text-shadow:_0_2px_4px_rgb(0_0_0_/_40%)]">
             Test Locked
           </h1>
-          <p className="mt-4 max-w-lg text-lg text-red-500 italic ">
+          <p className="mt-4 max-w-lg text-lg text-red-500 italic">
             Access to this test has been revoked due to a security violation, such as exiting fullscreen or switching tabs.
           </p>
           <div className="mt-8 rounded-lg border border-slate-700 bg-slate-800/50 p-4">
-            <p className="font-bold italic  text-green-700">
+            <p className="font-bold italic text-green-700">
               Please inform your department coordinator — you can no longer proceed with the test.
             </p>
           </div>
@@ -67,17 +66,19 @@ export default function QuestionPage({ params }: { params: Promise<{ testId: str
   }
 
   const handleNext = () => {
-    if (!test) return;
+    if (!test || !test.questions || test.questions.length === 0) return;
     if (currentQuestionIndex < test.questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     }
   };
 
   const onClear = () => {
-    if (!test) return;
-    const currentQuestionId = test.questions[currentQuestionIndex]._id;
-    // You might want to dispatch an action here to clear the option
-    handleOptionChange(currentQuestionId, '', ''); 
+    if (!test || !test.questions || test.questions.length === 0) return;
+    const currentQuestion = test.questions[currentQuestionIndex];
+    if (!currentQuestion) return;
+    
+    console.log('Clearing answer for question:', currentQuestion._id);
+    handleOptionChange(currentQuestion._id, '', '');
   };
 
   const handlePrev = () => {
@@ -87,6 +88,7 @@ export default function QuestionPage({ params }: { params: Promise<{ testId: str
   };
 
   const handleNavigate = (index: number) => {
+    if (!test || !test.questions || index < 0 || index >= test.questions.length) return;
     setCurrentQuestionIndex(index);
   };
 
@@ -103,13 +105,50 @@ export default function QuestionPage({ params }: { params: Promise<{ testId: str
     return <div className="flex justify-center items-center h-screen text-xl">Test not found.</div>;
   }
 
+  // Check if test has questions
+  if (!test.questions || test.questions.length === 0) {
+    return <div className="flex justify-center items-center h-screen text-xl text-red-500">No questions found in this test.</div>;
+  }
+
+  // Ensure currentQuestionIndex is within bounds
+  if (currentQuestionIndex >= test.questions.length) {
+    setCurrentQuestionIndex(0);
+    return <div className="flex justify-center items-center h-screen text-xl">Loading question...</div>;
+  }
+
   // --- Submission States ---
   if (isSubmitting) {
     return <div className="flex justify-center items-center h-screen text-xl">Submitting test...</div>;
   }
 
   if (isSubmitted) {
-    return <SuccessAnimation />;
+    return (
+      <div className="flex flex-col justify-center items-center h-screen">
+        <SuccessAnimation />
+        {submissionResult && (
+          <div className="mt-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <div>
+                <p className="font-semibold">Test Submitted Successfully!</p>
+                <p className="text-sm">
+                  Score: {submissionResult.score} | 
+                  Total Questions: {submissionResult.results?.length || 0}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Get current question safely
+  const currentQuestion = test.questions[currentQuestionIndex];
+  if (!currentQuestion) {
+    return <div className="flex justify-center items-center h-screen text-xl text-red-500">Question not found.</div>;
   }
 
   // --- Main Test Interface ---
@@ -138,14 +177,14 @@ export default function QuestionPage({ params }: { params: Promise<{ testId: str
         {/* Content Area */}
         {testStatus === 'active' ? (
           <QuestionCard
-            question={test.questions[currentQuestionIndex]}
+            question={currentQuestion}
             onOptionChange={(value, text) => {
-              const currentQuestion = test.questions[currentQuestionIndex];
-              handleOptionChange(currentQuestion._id, value, text); // Pass value and text as received from QuestionCard
+              console.log('QuestionCard onOptionChange called:', { questionId: currentQuestion._id, value, text });
+              handleOptionChange(currentQuestion._id, value, text);
             }}
             currentIndex={currentQuestionIndex}
             onNext={handleNext}
-            selectedOption={selectedOptions[test.questions[currentQuestionIndex]._id] || ''}
+            selectedOption={selectedOptions[currentQuestion._id] || ''}
             onClear={onClear}
             onSubmit={submitTest}
             onPrev={handlePrev}

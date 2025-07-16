@@ -340,7 +340,7 @@ export default function TeacherDashboard() {
               Welcome, Faculty Members
             </h1>
             <p className="subtitle">
-              Manage Assesments, analyze student performance, and streamline your academic workflow
+              Manage Assessments, analyze student performance, and streamline your academic workflow
             </p>
           </div>
 
@@ -356,7 +356,7 @@ export default function TeacherDashboard() {
                   {card.icon}
                 </div>
                 <h2 className="card-title">{card.title}</h2>
-                <p className="card-description">{card.desc || card.desc}</p>
+                <p className="card-description">{card.desc}</p>
               </button>
             ))}
           </div>
