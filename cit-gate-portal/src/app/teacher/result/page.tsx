@@ -346,43 +346,33 @@ const TeacherResultsPage: React.FC = () => {
     XLSX.writeFile(wb, fileName);
   };
 
-  // Pie Chart Component
-  const PieChart = ({ data }: { data: any[] }) => {
-    const total = data.reduce((sum, item) => sum + item.count, 0);
-    if (total === 0) return <div className="text-center text-gray-400">No data to display</div>;
-    
-    let cumulativePercentage = 0;
-    
+ const PieChart = ({ data }: { data: any[] }) => {
+  const total = data.reduce((sum, item) => sum + item.count, 0);
+  if (total === 0) return <div className="text-center text-gray-400">No data to display</div>;
+  
+  const centerX = 150;
+  const centerY = 150;
+  const radius = 100;
+  
+  // Filter out zero values
+  const filteredData = data.filter(item => item.count > 0);
+  
+  // Special case: if only one segment, draw a full circle
+  if (filteredData.length === 1) {
+    const item = filteredData[0];
     return (
       <div className="flex items-center justify-center">
         <svg width="300" height="300" className="mr-8">
-          {data.map((item, index) => {
-            const percentage = (item.count / total) * 100;
-            const startAngle = (cumulativePercentage / 100) * 360;
-            const endAngle = ((cumulativePercentage + percentage) / 100) * 360;
-            
-            const x1 = 150 + 100 * Math.cos((startAngle - 90) * Math.PI / 180);
-            const y1 = 150 + 100 * Math.sin((startAngle - 90) * Math.PI / 180);
-            const x2 = 150 + 100 * Math.cos((endAngle - 90) * Math.PI / 180);
-            const y2 = 150 + 100 * Math.sin((endAngle - 90) * Math.PI / 180);
-            
-            const largeArcFlag = percentage > 50 ? 1 : 0;
-            const pathData = item.count > 0 ? `M 150 150 L ${x1} ${y1} A 100 100 0 ${largeArcFlag} 1 ${x2} ${y2} Z` : '';
-            
-            cumulativePercentage += percentage;
-            
-            return item.count > 0 ? (
-              <path
-                key={index}
-                d={pathData}
-                fill={item.color}
-                stroke="#1e293b"
-                strokeWidth="2"
-                className="transition-all duration-300 hover:brightness-110 cursor-pointer"
-                style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))' }}
-              />
-            ) : null;
-          })}
+          <circle
+            cx={centerX}
+            cy={centerY}
+            r={radius}
+            fill={item.color}
+            stroke="#1e293b"
+            strokeWidth="2"
+            className="transition-all duration-300 hover:brightness-110 cursor-pointer"
+            style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))' }}
+          />
         </svg>
         <div className="space-y-2">
           {data.map((item, index) => (
@@ -390,7 +380,7 @@ const TeacherResultsPage: React.FC = () => {
               <div 
                 className="w-4 h-4 rounded-full mr-2 shadow-sm"
                 style={{ backgroundColor: item.color }}
-              ></div>
+              />
               <span className="text-sm text-gray-300">
                 {item.label}: {item.count} ({((item.count / total) * 100).toFixed(1)}%)
               </span>
@@ -399,54 +389,105 @@ const TeacherResultsPage: React.FC = () => {
         </div>
       </div>
     );
-  };
+  }
+  
+  let cumulativePercentage = 0;
+  
+  return (
+    <div className="flex items-center justify-center">
+      <svg width="300" height="300" className="mr-8">
+        {filteredData.map((item, index) => {
+          const percentage = (item.count / total) * 100;
+          const startAngle = (cumulativePercentage / 100) * 360;
+          const endAngle = ((cumulativePercentage + percentage) / 100) * 360;
+          
+          // Convert to radians and adjust for SVG coordinate system
+          const startAngleRad = ((startAngle - 90) * Math.PI) / 180;
+          const endAngleRad = ((endAngle - 90) * Math.PI) / 180;
+          
+          // Calculate coordinates
+          const x1 = centerX + radius * Math.cos(startAngleRad);
+          const y1 = centerY + radius * Math.sin(startAngleRad);
+          const x2 = centerX + radius * Math.cos(endAngleRad);
+          const y2 = centerY + radius * Math.sin(endAngleRad);
+          
+          // Determine if we need a large arc
+          const largeArcFlag = percentage > 50 ? 1 : 0;
+          
+          // Create the path
+          const pathData = `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
+          
+          cumulativePercentage += percentage;
+          
+          return (
+            <path
+              key={index}
+              d={pathData}
+              fill={item.color}
+              stroke="#1e293b"
+              strokeWidth="2"
+              className="transition-all duration-300 hover:brightness-110 cursor-pointer"
+              style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))' }}
+            />
+          );
+        })}
+      </svg>
+      <div className="space-y-2">
+        {data.map((item, index) => (
+          <div key={index} className="flex items-center">
+            <div 
+              className="w-4 h-4 rounded-full mr-2 shadow-sm"
+              style={{ backgroundColor: item.color }}
+            />
+            <span className="text-sm text-gray-300">
+              {item.label}: {item.count} ({((item.count / total) * 100).toFixed(1)}%)
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
-  // Doughnut Chart Component
-  const DoughnutChart = ({ data }: { data: any[] }) => {
-    const total = data.reduce((sum, item) => sum + item.count, 0);
-    if (total === 0) return <div className="text-center text-gray-400">No data to display</div>;
-    
-    let cumulativePercentage = 0;
-    
+const DoughnutChart = ({ data }: { data: any[] }) => {
+  const total = data.reduce((sum, item) => sum + item.count, 0);
+  if (total === 0) return <div className="text-center text-gray-400">No data to display</div>;
+  
+  const centerX = 150;
+  const centerY = 150;
+  const outerRadius = 100;
+  const innerRadius = 60;
+  
+  // Filter out zero values
+  const filteredData = data.filter(item => item.count > 0);
+  
+  // Special case: if only one segment, draw a full doughnut
+  if (filteredData.length === 1) {
+    const item = filteredData[0];
     return (
       <div className="flex items-center justify-center">
         <svg width="300" height="300" className="mr-8">
-          {data.map((item, index) => {
-            const percentage = (item.count / total) * 100;
-            const startAngle = (cumulativePercentage / 100) * 360;
-            const endAngle = ((cumulativePercentage + percentage) / 100) * 360;
-            
-            const x1 = 150 + 100 * Math.cos((startAngle - 90) * Math.PI / 180);
-            const y1 = 150 + 100 * Math.sin((startAngle - 90) * Math.PI / 180);
-            const x2 = 150 + 100 * Math.cos((endAngle - 90) * Math.PI / 180);
-            const y2 = 150 + 100 * Math.sin((endAngle - 90) * Math.PI / 180);
-            
-            const x3 = 150 + 60 * Math.cos((startAngle - 90) * Math.PI / 180);
-            const y3 = 150 + 60 * Math.sin((startAngle - 90) * Math.PI / 180);
-            const x4 = 150 + 60 * Math.cos((endAngle - 90) * Math.PI / 180);
-            const y4 = 150 + 60 * Math.sin((endAngle - 90) * Math.PI / 180);
-            
-            const largeArcFlag = percentage > 50 ? 1 : 0;
-            const pathData = item.count > 0 ? `M ${x1} ${y1} A 100 100 0 ${largeArcFlag} 1 ${x2} ${y2} L ${x4} ${y4} A 60 60 0 ${largeArcFlag} 0 ${x3} ${y3} Z` : '';
-            
-            cumulativePercentage += percentage;
-            
-            return item.count > 0 ? (
-              <path
-                key={index}
-                d={pathData}
-                fill={item.color}
-                stroke="#1e293b"
-                strokeWidth="2"
-                className="transition-all duration-300 hover:brightness-110 cursor-pointer"
-                style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))' }}
-              />
-            ) : null;
-          })}
-          <text x="150" y="150" textAnchor="middle" className="text-lg font-bold fill-white">
+          <defs>
+            <mask id="doughnut-mask">
+              <rect width="300" height="300" fill="white"/>
+              <circle cx={centerX} cy={centerY} r={innerRadius} fill="black"/>
+            </mask>
+          </defs>
+          <circle
+            cx={centerX}
+            cy={centerY}
+            r={outerRadius}
+            fill={item.color}
+            stroke="#1e293b"
+            strokeWidth="2"
+            mask="url(#doughnut-mask)"
+            className="transition-all duration-300 hover:brightness-110 cursor-pointer"
+            style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))' }}
+          />
+          <text x={centerX} y={centerY - 5} textAnchor="middle" className="text-lg font-bold fill-white">
             {total}
           </text>
-          <text x="150" y="165" textAnchor="middle" className="text-sm fill-gray-300">
+          <text x={centerX} y={centerY + 15} textAnchor="middle" className="text-sm fill-gray-300">
             Total
           </text>
         </svg>
@@ -456,7 +497,7 @@ const TeacherResultsPage: React.FC = () => {
               <div 
                 className="w-4 h-4 rounded-full mr-2 shadow-sm"
                 style={{ backgroundColor: item.color }}
-              ></div>
+              />
               <span className="text-sm text-gray-300">
                 {item.label}: {item.count} ({((item.count / total) * 100).toFixed(1)}%)
               </span>
@@ -465,7 +506,81 @@ const TeacherResultsPage: React.FC = () => {
         </div>
       </div>
     );
-  };
+  }
+  
+  let cumulativePercentage = 0;
+  
+  return (
+    <div className="flex items-center justify-center">
+      <svg width="300" height="300" className="mr-8">
+        {filteredData.map((item, index) => {
+          const percentage = (item.count / total) * 100;
+          const startAngle = (cumulativePercentage / 100) * 360;
+          const endAngle = ((cumulativePercentage + percentage) / 100) * 360;
+          
+          // Convert to radians
+          const startAngleRad = ((startAngle - 90) * Math.PI) / 180;
+          const endAngleRad = ((endAngle - 90) * Math.PI) / 180;
+          
+          // Calculate outer coordinates
+          const x1 = centerX + outerRadius * Math.cos(startAngleRad);
+          const y1 = centerY + outerRadius * Math.sin(startAngleRad);
+          const x2 = centerX + outerRadius * Math.cos(endAngleRad);
+          const y2 = centerY + outerRadius * Math.sin(endAngleRad);
+          
+          // Calculate inner coordinates
+          const x3 = centerX + innerRadius * Math.cos(startAngleRad);
+          const y3 = centerY + innerRadius * Math.sin(startAngleRad);
+          const x4 = centerX + innerRadius * Math.cos(endAngleRad);
+          const y4 = centerY + innerRadius * Math.sin(endAngleRad);
+          
+          // Determine if we need a large arc
+          const largeArcFlag = percentage > 50 ? 1 : 0;
+          
+          // Create the path for the doughnut segment
+          const pathData = `M ${x1} ${y1} A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 1 ${x2} ${y2} L ${x4} ${y4} A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${x3} ${y3} Z`;
+          
+          cumulativePercentage += percentage;
+          
+          return (
+            <path
+              key={index}
+              d={pathData}
+              fill={item.color}
+              stroke="#1e293b"
+              strokeWidth="2"
+              className="transition-all duration-300 hover:brightness-110 cursor-pointer"
+              style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))' }}
+            />
+          );
+        })}
+        
+        {/* Center text */}
+        <text x={centerX} y={centerY - 5} textAnchor="middle" className="text-lg font-bold fill-white">
+          {total}
+        </text>
+        <text x={centerX} y={centerY + 15} textAnchor="middle" className="text-sm fill-gray-300">
+          Total
+        </text>
+      </svg>
+      <div className="space-y-2">
+        {data.map((item, index) => (
+          <div key={index} className="flex items-center">
+            <div 
+              className="w-4 h-4 rounded-full mr-2 shadow-sm"
+              style={{ backgroundColor: item.color }}
+            />
+            <span className="text-sm text-gray-300">
+              {item.label}: {item.count} ({((item.count / total) * 100).toFixed(1)}%)
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+
 
   const stats = calculateStats();
   const distribution = getScoreDistribution();
@@ -484,6 +599,7 @@ const TeacherResultsPage: React.FC = () => {
           overflow: hidden;
           padding: 2rem 1rem;
         }
+          
 
         .animated-background {
           position: absolute;
@@ -506,6 +622,7 @@ const TeacherResultsPage: React.FC = () => {
           max-width: 1400px;
           margin: 0 auto;
         }
+           
 
         .glass-card {
           background: rgba(30, 41, 59, 0.8);
@@ -803,8 +920,8 @@ const TeacherResultsPage: React.FC = () => {
           position: relative;
           overflow: hidden;
           box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        }
 
+        }
         .chart-container::before {
           content: '';
           position: absolute;
@@ -1112,8 +1229,8 @@ const TeacherResultsPage: React.FC = () => {
               <span className="badge-text">Analytics Dashboard</span>
             </div>
             
-            <h1 className="main-title">Test Results Dashboard</h1>
-            <p className="subtitle">Comprehensive analytics and insights for your scheduled tests</p>
+            <h1 className="main-title">Gate Test Results Dashboard</h1>
+            <p className="subtitle">Comprehensive analytics for your scheduled tests</p>
           </header>
 
           {error && (
@@ -1150,15 +1267,23 @@ const TeacherResultsPage: React.FC = () => {
                       Download Excel
                     </button>
                   )}
-                  <Link href="/teacher/dashboard" className="status-badge success">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                    </svg>
-                    Back to Dashboard
-                  </Link>
+                  {/* <Link href="/teacher" className="dashboard-link-btn">
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+  </svg>
+  Back to Dashboard
+</Link> */}
+              <button 
+                onClick={() => router.push('/teacher')} 
+                className="download-btn !bg-gradient-to-r !from-blue-500 !to-blue-700 hover:!from-blue-600 hover:!to-blue-800 hover:!shadow-blue-500/40 focus:!ring-blue-500/30 active:!from-blue-700 active:!to-blue-600 !shadow-blue-500/30"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Back to Dashboard
+              </button>
                 </div>
-              </div>
-              
+              </div>     
               {isLoadingTests ? (
                 <div className="text-center py-12">
                   <div className="loading-spinner mx-auto mb-4"></div>
@@ -1258,7 +1383,7 @@ const TeacherResultsPage: React.FC = () => {
                         <option value="department">Department</option>
                         <option value="name">Name</option>
                         <option value="time">Time</option>
-                        <option value="regno">Registration</option>
+                        <option value="regno">Reg No</option>
                       </select>
                     </div>
                     <button 
@@ -1399,7 +1524,7 @@ const TeacherResultsPage: React.FC = () => {
                           <svg className="w-6 h-6 mr-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                           </svg>
-                          Score Distribution Analysis
+                             Score Distribution Analysis
                         </h3>
                         <div className="chart-type-selector">
                           <button 
@@ -1488,7 +1613,7 @@ const TeacherResultsPage: React.FC = () => {
                             <tr>
                               <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Rank</th>
                               <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Student Details</th>
-                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Registration</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Reg No</th>
                               <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Department</th>
                               <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Score</th>
                               <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Performance</th>
@@ -1631,4 +1756,3 @@ const TeacherResultsPage: React.FC = () => {
 };
 
 export default TeacherResultsPage;
-

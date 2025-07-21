@@ -7,8 +7,9 @@ interface QuestionCardProps {
         _id: string;
         questionText: string;
         imageUrl?: string;
+        questionImage?: string;
         options: { text: string; isCorrect: boolean; _id: string }[];
-        type: 'MCQ' | 'MSQ' | 'NAT';
+        type: 'MCQ' | 'MSQ' | 'NAT' | 'mcq' | 'msq' | 'nat';
         mark: number;
     };
     currentIndex: number;
@@ -32,29 +33,47 @@ export default function QuestionCard({
     onClear, 
     onSubmit 
 }: QuestionCardProps) {
+    const getImageUrl = () => {
+        const imageUrl = question.imageUrl || question.questionImage;
+        
+        if (!imageUrl) return null;
+        
+        if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+            return imageUrl;
+        }
+        
+        if (imageUrl.startsWith('/uploads/')) {
+            return `${process.env.NEXT_PUBLIC_BACKEND_URL}${imageUrl}`;
+        }
+        
+        return imageUrl;
+    };
+
+    const imageUrl = getImageUrl();
+    const questionType = question.type.toUpperCase();
+    const hasImage = !!imageUrl;
+
     return (
         <>
             <style jsx>{`
                 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
                 
                 .question-card {
-                    width: 100%;
-                    height: 100%;
-                    background: rgba(30, 41, 59, 0.95);
-                    backdrop-filter: blur(20px);
-                    padding: 2rem;
-                    border-radius: 24px;
-                    box-shadow: 
-                        0 25px 50px rgba(0, 0, 0, 0.4),
-                        0 0 0 1px rgba(34, 197, 94, 0.2),
-                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
-                    display: flex;
-                    flex-direction: column;
-                    border: 2px solid rgba(34, 197, 94, 0.3);
-                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                    position: relative;
-                    overflow: hidden;
-                }
+    width: 100%;
+    height: 100%;  /* Changed from calc(100vh - 80px) */
+    background: rgba(30, 41, 59, 0.98);
+    padding: 1.5rem;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    position: relative;
+    overflow: hidden;
+    box-sizing: border-box;  /* Added this */
+}
+
 
                 .question-card::before {
                     content: '';
@@ -62,169 +81,155 @@ export default function QuestionCard({
                     top: 0;
                     left: 0;
                     right: 0;
-                    height: 4px;
+                    height: 3px;
                     background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
                 }
 
                 .question-content {
-                    flex-grow: 1;
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    gap: ${hasImage ? '1.5rem' : '2rem'};
+                    overflow-y: auto;
+                    overflow-x: hidden;
+                    padding-right: 4px;
                 }
 
                 .question-header {
-                    background: rgba(34, 197, 94, 0.1);
-                    padding: 2rem;
-                    border-radius: 20px;
-                    margin-bottom: 2rem;
-                    border: 1px solid rgba(34, 197, 94, 0.2);
-                    position: relative;
-                    overflow: hidden;
-                }
-
-                .question-header::before {
-                    content: '';
-                    position: absolute;
-                    top: -50%;
-                    left: -50%;
-                    width: 200%;
-                    height: 200%;
-                    background: linear-gradient(45deg, transparent, rgba(34, 197, 94, 0.1), transparent);
-                    animation: shimmer 3s infinite;
-                }
-
-                @keyframes shimmer {
-                    0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-                    100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+                    background: rgba(34, 197, 94, 0.05);
+                    padding: ${hasImage ? '1.25rem' : '2rem'};
+                    border-radius: 12px;
+                    border: 1px solid rgba(34, 197, 94, 0.15);
+                    flex-shrink: 0;
                 }
 
                 .question-title {
-                    font-size: 1.75rem;
+                    font-size: 1.5rem;
                     font-weight: 700;
                     color: white;
                     margin-bottom: 1rem;
                     display: flex;
                     align-items: center;
                     gap: 1rem;
-                    position: relative;
-                    z-index: 2;
+                    flex-wrap: wrap;
                 }
 
                 .question-number {
                     background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
                     color: white;
-                    padding: 8px 16px;
-                    border-radius: 12px;
-                    font-size: 1rem;
+                    padding: 6px 12px;
+                    border-radius: 8px;
+                    font-size: 0.9rem;
                     font-weight: 600;
-                    box-shadow: 0 8px 20px rgba(34, 197, 94, 0.3);
+                    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
                 }
 
                 .marks-badge {
-                    background: rgba(34, 197, 94, 0.2);
+                    background: rgba(34, 197, 94, 0.15);
                     color: #4ade80;
-                    padding: 6px 12px;
-                    border-radius: 8px;
-                    font-size: 0.875rem;
+                    padding: 4px 8px;
+                    border-radius: 6px;
+                    font-size: 0.8rem;
                     font-weight: 600;
-                    border: 1px solid rgba(34, 197, 94, 0.3);
+                    border: 1px solid rgba(34, 197, 94, 0.2);
                 }
 
                 .question-text {
-                    font-size: 1.125rem;
+                    font-size: ${hasImage ? '1rem' : '1.2rem'};
                     color: #e2e8f0;
-                    line-height: 1.7;
+                    line-height: ${hasImage ? '1.5' : '1.7'};
                     font-weight: 500;
-                    position: relative;
-                    z-index: 2;
+                    margin-bottom: ${hasImage ? '0.75rem' : '0'};
                 }
 
                 .question-image-container {
-                    display: flex;
+                    display: ${hasImage ? 'flex' : 'none'};
                     justify-content: center;
-                    margin: 1.5rem 0;
-                    padding: 1rem;
-                    background: rgba(51, 65, 85, 0.3);
-                    border-radius: 16px;
-                    border: 1px solid rgba(34, 197, 94, 0.2);
+                    margin: 1rem 0;
+                    padding: 0.75rem;
+                    background: rgba(51, 65, 85, 0.2);
+                    border-radius: 12px;
+                    border: 1px solid rgba(34, 197, 94, 0.1);
+                    max-height: 40vh;
+                    overflow: hidden;
                 }
 
                 .question-image {
                     max-width: 100%;
+                    max-height: 100%;
                     height: auto;
-                    border-radius: 12px;
-                    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
-                    border: 2px solid rgba(34, 197, 94, 0.3);
+                    border-radius: 8px;
+                    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+                    border: 1px solid rgba(34, 197, 94, 0.2);
+                    transition: transform 0.3s ease;
+                    object-fit: contain;
+                }
+
+                .question-image:hover {
+                    transform: scale(1.02);
+                }
+
+                .image-error {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    min-height: 100px;
+                    color: #fca5a5;
+                    font-size: 0.875rem;
+                    background: rgba(239, 68, 68, 0.08);
+                    border: 1px solid rgba(239, 68, 68, 0.2);
+                    border-radius: 8px;
                 }
 
                 .options-container {
                     display: flex;
                     flex-direction: column;
-                    gap: 1rem;
+                    gap: ${hasImage ? '0.75rem' : '1rem'};
                     width: 100%;
+                    flex: 1;
+                    overflow-y: auto;
+                    padding-right: 4px;
                 }
 
                 .option-label {
                     display: flex;
                     align-items: center;
-                    gap: 1rem;
-                    padding: 1.25rem 1.5rem;
-                    border-radius: 16px;
+                    gap: 0.75rem;
+                    padding: ${hasImage ? '0.875rem 1.125rem' : '1.25rem 1.5rem'};
+                    border-radius: 12px;
                     cursor: pointer;
-                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                    border: 2px solid rgba(51, 65, 85, 0.6);
-                    background: rgba(51, 65, 85, 0.3);
-                    backdrop-filter: blur(10px);
+                    transition: all 0.2s ease;
+                    border: 1.5px solid rgba(51, 65, 85, 0.5);
+                    background: rgba(51, 65, 85, 0.15);
                     position: relative;
-                    overflow: hidden;
-                }
-
-                .option-label::before {
-                    content: '';
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%);
-                    opacity: 0;
-                    transition: opacity 0.3s ease;
-                }
-
-                .option-label:hover::before {
-                    opacity: 1;
                 }
 
                 .option-label:hover {
-                    border-color: rgba(34, 197, 94, 0.5);
-                    transform: translateY(-2px);
-                    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+                    border-color: rgba(34, 197, 94, 0.4);
+                    background: rgba(51, 65, 85, 0.25);
+                    transform: translateY(-1px);
                 }
 
                 .option-label.selected {
-                    background: rgba(34, 197, 94, 0.2);
+                    background: rgba(34, 197, 94, 0.15);
                     border-color: #22c55e;
                     color: #4ade80;
-                    box-shadow: 0 8px 25px rgba(34, 197, 94, 0.3);
-                }
-
-                .option-label.selected::before {
-                    opacity: 1;
+                    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.2);
                 }
 
                 .option-input {
-                    width: 20px;
-                    height: 20px;
+                    width: 18px;
+                    height: 18px;
                     accent-color: #22c55e;
-                    position: relative;
-                    z-index: 2;
+                    flex-shrink: 0;
                 }
 
                 .option-text {
-                    font-size: 1.125rem;
+                    font-size: ${hasImage ? '0.95rem' : '1.1rem'};
                     font-weight: 500;
                     color: #e2e8f0;
-                    position: relative;
-                    z-index: 2;
-                    transition: color 0.3s ease;
+                    transition: color 0.2s ease;
+                    line-height: 1.4;
                 }
 
                 .option-label.selected .option-text {
@@ -234,22 +239,21 @@ export default function QuestionCard({
 
                 .nat-input {
                     width: 100%;
-                    padding: 1.25rem 1.5rem;
-                    background: rgba(51, 65, 85, 0.5);
-                    border: 2px solid rgba(51, 65, 85, 0.6);
-                    border-radius: 16px;
+                    padding: ${hasImage ? '0.875rem 1.125rem' : '1.25rem 1.5rem'};
+                    background: rgba(51, 65, 85, 0.3);
+                    border: 1.5px solid rgba(51, 65, 85, 0.5);
+                    border-radius: 12px;
                     color: white;
-                    font-size: 1.125rem;
+                    font-size: ${hasImage ? '0.95rem' : '1.1rem'};
                     font-weight: 500;
-                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                    backdrop-filter: blur(10px);
+                    transition: all 0.2s ease;
                 }
 
                 .nat-input:focus {
                     outline: none;
                     border-color: #22c55e;
-                    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.3);
-                    background: rgba(51, 65, 85, 0.8);
+                    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+                    background: rgba(51, 65, 85, 0.4);
                 }
 
                 .nat-input::placeholder {
@@ -260,58 +264,42 @@ export default function QuestionCard({
                 .error-message {
                     text-align: center;
                     color: #fca5a5;
-                    font-size: 1.125rem;
+                    font-size: 1rem;
                     font-weight: 600;
-                    padding: 1.5rem;
-                    background: rgba(239, 68, 68, 0.1);
-                    border: 1px solid rgba(239, 68, 68, 0.3);
-                    border-radius: 16px;
-                    margin: 1rem 0;
+                    padding: 1.25rem;
+                    background: rgba(239, 68, 68, 0.08);
+                    border: 1px solid rgba(239, 68, 68, 0.2);
+                    border-radius: 12px;
+                    margin: 0.5rem 0;
                 }
 
                 .action-buttons {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
-                    margin-top: 2rem;
-                    padding-top: 2rem;
-                    border-top: 1px solid rgba(51, 65, 85, 0.6);
+                    padding-top: 1.5rem;
+                    border-top: 1px solid rgba(51, 65, 85, 0.4);
                     gap: 1rem;
+                    flex-shrink: 0;
+                    margin-top: auto;
                 }
 
                 .btn {
                     display: inline-flex;
                     align-items: center;
-                    gap: 8px;
-                    padding: 12px 24px;
+                    gap: 6px;
+                    padding: 10px 20px;
                     border: none;
-                    border-radius: 12px;
-                    font-size: 0.875rem;
+                    border-radius: 8px;
+                    font-size: 0.85rem;
                     font-weight: 600;
                     cursor: pointer;
-                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-                    position: relative;
-                    overflow: hidden;
-                }
-
-                .btn::before {
-                    content: '';
-                    position: absolute;
-                    top: 0;
-                    left: -100%;
-                    width: 100%;
-                    height: 100%;
-                    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-                    transition: left 0.5s ease;
-                }
-
-                .btn:hover::before {
-                    left: 100%;
+                    transition: all 0.2s ease;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
                 }
 
                 .btn:hover {
-                    transform: translateY(-2px);
+                    transform: translateY(-1px);
                 }
 
                 .btn:active {
@@ -324,24 +312,24 @@ export default function QuestionCard({
                 }
 
                 .btn-clear:hover {
-                    box-shadow: 0 12px 30px rgba(239, 68, 68, 0.4);
+                    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
                 }
 
                 .btn-navigation {
-                    background: rgba(51, 65, 85, 0.5);
+                    background: rgba(51, 65, 85, 0.4);
                     color: #e2e8f0;
-                    border: 1px solid rgba(51, 65, 85, 0.6);
+                    border: 1px solid rgba(51, 65, 85, 0.5);
                 }
 
                 .btn-navigation:hover {
-                    background: rgba(34, 197, 94, 0.2);
+                    background: rgba(34, 197, 94, 0.15);
                     border-color: #22c55e;
                     color: #4ade80;
-                    box-shadow: 0 12px 30px rgba(34, 197, 94, 0.3);
+                    box-shadow: 0 6px 20px rgba(34, 197, 94, 0.2);
                 }
 
                 .btn-navigation:disabled {
-                    background: rgba(51, 65, 85, 0.3);
+                    background: rgba(51, 65, 85, 0.2);
                     color: #64748b;
                     cursor: not-allowed;
                     opacity: 0.5;
@@ -359,33 +347,56 @@ export default function QuestionCard({
                 }
 
                 .btn-submit:hover {
-                    box-shadow: 0 12px 30px rgba(34, 197, 94, 0.4);
+                    box-shadow: 0 6px 20px rgba(34, 197, 94, 0.3);
                 }
 
                 .navigation-group {
                     display: flex;
-                    gap: 1rem;
+                    gap: 0.75rem;
+                }
+
+                /* Custom scrollbar */
+                .question-content::-webkit-scrollbar,
+                .options-container::-webkit-scrollbar {
+                    width: 6px;
+                }
+
+                .question-content::-webkit-scrollbar-track,
+                .options-container::-webkit-scrollbar-track {
+                    background: rgba(51, 65, 85, 0.2);
+                    border-radius: 3px;
+                }
+
+                .question-content::-webkit-scrollbar-thumb,
+                .options-container::-webkit-scrollbar-thumb {
+                    background: rgba(34, 197, 94, 0.4);
+                    border-radius: 3px;
+                }
+
+                .question-content::-webkit-scrollbar-thumb:hover,
+                .options-container::-webkit-scrollbar-thumb:hover {
+                    background: rgba(34, 197, 94, 0.6);
                 }
 
                 @media (max-width: 768px) {
-                    .question-card {
-                        padding: 1.5rem;
-                    }
-                    
+                     .question-card {
+        height: 100%;  
+        padding: 1rem;
+    }
                     .question-header {
-                        padding: 1.5rem;
+                        padding: ${hasImage ? '1rem' : '1.5rem'};
                     }
                     
                     .question-title {
-                        font-size: 1.5rem;
+                        font-size: 1.25rem;
                         flex-direction: column;
                         align-items: flex-start;
                         gap: 0.5rem;
                     }
-                    
+
                     .action-buttons {
                         flex-direction: column;
-                        gap: 1rem;
+                        gap: 0.75rem;
                     }
                     
                     .navigation-group {
@@ -402,24 +413,9 @@ export default function QuestionCard({
                         width: auto;
                         flex: 1;
                     }
-                }
 
-                @media (max-width: 640px) {
-                    .question-title {
-                        font-size: 1.25rem;
-                    }
-                    
-                    .option-label {
-                        padding: 1rem;
-                    }
-                    
-                    .option-text {
-                        font-size: 1rem;
-                    }
-                    
-                    .nat-input {
-                        padding: 1rem;
-                        font-size: 1rem;
+                    .question-image-container {
+                        max-height: 30vh;
                     }
                 }
             `}</style>
@@ -436,25 +432,34 @@ export default function QuestionCard({
                             </span>
                         </div>
                         <p className="question-text">{question.questionText}</p>
-                        {question.imageUrl && (
+                        {imageUrl && (
                             <div className="question-image-container">
                                 <img
-                                    src={question.imageUrl.startsWith('/uploads/') 
-                                        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}${question.imageUrl}` 
-                                        : question.imageUrl}
+                                    src={imageUrl}
                                     alt="Question Image"
                                     className="question-image"
+                                    onError={(e) => {
+                                        console.error('Failed to load image:', imageUrl);
+                                        e.currentTarget.style.display = 'none';
+                                        const errorDiv = document.createElement('div');
+                                        errorDiv.className = 'image-error';
+                                        errorDiv.innerHTML = '⚠️ Image failed to load';
+                                        e.currentTarget.parentNode?.appendChild(errorDiv);
+                                    }}
+                                    onLoad={() => {
+                                        console.log('✅ Image loaded successfully:', imageUrl);
+                                    }}
                                 />
                             </div>
                         )}
                     </div>
 
                     <div className="options-container">
-                        {question.type && question.type.toUpperCase() === 'MCQ' && (
+                        {questionType === 'MCQ' && (
                             question.options.length > 0 ? (
                                 question.options.map((option, idx) => (
                                     <label
-                                        key={idx}
+                                        key={option._id || idx}
                                         className={`option-label ${selectedOption === option.text ? 'selected' : ''}`}
                                     >
                                         <input
@@ -462,7 +467,7 @@ export default function QuestionCard({
                                             name={`question-${question._id}`}
                                             value={option._id}
                                             checked={selectedOption === option.text}
-                                            onChange={(e) => onOptionChange(option._id, option.text)}
+                                            onChange={() => onOptionChange(option._id, option.text)}
                                             className="option-input"
                                         />
                                         <span className="option-text">{option.text}</span>
@@ -478,11 +483,11 @@ export default function QuestionCard({
                             )
                         )}
 
-                        {question.type && question.type.toUpperCase() === 'MSQ' && (
+                        {questionType === 'MSQ' && (
                             question.options.length > 0 ? (
                                 question.options.map((option, idx) => (
                                     <label
-                                        key={idx}
+                                        key={option._id || idx}
                                         className={`option-label ${selectedOption.split(',').includes(option.text) ? 'selected' : ''}`}
                                     >
                                         <input
@@ -516,7 +521,7 @@ export default function QuestionCard({
                             )
                         )}
 
-                        {question.type && question.type.toUpperCase() === 'NAT' && (
+                        {(questionType === 'NAT' || questionType === 'NUMERICAL') && (
                             <input
                                 type="text"
                                 value={selectedOption}
@@ -526,7 +531,7 @@ export default function QuestionCard({
                             />
                         )}
 
-                        {!(question.type && (question.type.toUpperCase() === 'MCQ' || question.type.toUpperCase() === 'MSQ' || question.type.toUpperCase() === 'NAT')) && (
+                        {!['MCQ', 'MSQ', 'NAT', 'NUMERICAL'].includes(questionType) && (
                             <div className="error-message">
                                 <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ display: 'inline', marginRight: '8px' }}>
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />

@@ -755,7 +755,7 @@ export default function Signup() {
     Select your department
   </option>
   {departments.map((department) => (
-    <option key={department.split(' - ')[0]} value={department.split(' - ')[0]}>
+    <option key={department.split(' - ')[0]} value={department}>
       {department}
     </option>
   ))}

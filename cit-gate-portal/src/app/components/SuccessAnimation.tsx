@@ -6,7 +6,7 @@ const SuccessAnimation = () => {
   const router = useRouter();
   useEffect(() => {
     const timer = setTimeout(() => {
-      router.push('/student/dashboard');
+      router.replace('/student/dashboard');
     }, 5000);
 
     return () => clearTimeout(timer);
@@ -37,6 +37,9 @@ const SuccessAnimation = () => {
         <p className={styles.successMessage}>Test Submitted Successfully!</p>
        <p className={styles.redirectMessage}> 
   You will be automatically redirected to <span style={{ color: '#007bff', fontStyle: 'normal' }}>Dashboard</span> in 5 seconds...
+</p>
+<p className={styles.redirectMessage}> 
+   Please <span style={{ color:'red', fontWeight: 'bold', fontStyle: 'normal' }}>don't press</span> any key while we process your submission
 </p>
       </div>
     </div>

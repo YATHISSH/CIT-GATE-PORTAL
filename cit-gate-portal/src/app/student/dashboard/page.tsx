@@ -84,15 +84,17 @@ export default function Page() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-slate-900 flex items-center justify-center relative overflow-hidden">
-                {/* Green spotlight background */}
-                <div className="absolute inset-0 bg-gradient-radial from-green-500/20 via-green-500/10 to-transparent"></div>
-                <div className="relative z-10 text-center animate-fade-in">
+            <div className="min-h-screen flex items-center justify-center relative overflow-hidden"
+                 style={{ 
+                    backgroundColor: '#0f172a',
+                    backgroundImage: 'radial-gradient(ellipse 80% 80% at 50% -20%, rgba(75, 181, 67, 0.3), rgba(15, 23, 42, 0))',
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
+                 }}>
+                <div className="relative z-10 text-center">
                     <div className="relative mb-8">
                         <div className="w-20 h-20 border-4 border-slate-600 border-t-green-500 rounded-full animate-spin mx-auto"></div>
-                        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-20 h-20 border-4 border-transparent border-t-green-400 rounded-full animate-spin opacity-70"></div>
                     </div>
-                    <h2 className="text-white text-2xl font-bold mb-2 drop-shadow-lg">Loading Test Platform...</h2>
+                    <h2 className="text-white text-2xl font-bold mb-2" style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.4)' }}>Loading Test Platform...</h2>
                     <p className="text-slate-400 text-lg">Please wait while we fetch your tests</p>
                 </div>
             </div>
@@ -101,17 +103,20 @@ export default function Page() {
 
     if (error) {
         return (
-            <div className="min-h-screen bg-slate-900 flex items-center justify-center relative overflow-hidden">
-                {/* Green spotlight background */}
-                <div className="absolute inset-0 bg-gradient-radial from-green-500/20 via-green-500/10 to-transparent"></div>
-                <div className="relative z-10 text-center animate-fade-in">
+            <div className="min-h-screen flex items-center justify-center relative overflow-hidden"
+                 style={{ 
+                    backgroundColor: '#0f172a',
+                    backgroundImage: 'radial-gradient(ellipse 80% 80% at 50% -20%, rgba(75, 181, 67, 0.3), rgba(15, 23, 42, 0))',
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
+                 }}>
+                <div className="relative z-10 text-center">
                     <div className="bg-slate-800 p-10 rounded-2xl shadow-2xl border-l-4 border-red-500 max-w-md border border-slate-700">
                         <div className="w-16 h-16 bg-red-900 rounded-full flex items-center justify-center mx-auto mb-4">
                             <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                         </div>
-                        <h3 className="text-white text-xl font-bold mb-2 drop-shadow-lg">Connection Error</h3>
+                        <h3 className="text-white text-xl font-bold mb-2" style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.4)' }}>Connection Error</h3>
                         <p className="text-slate-400 mb-4">Unable to load tests at this time</p>
                         <p className="text-slate-500 text-sm">{error}</p>
                     </div>
@@ -121,7 +126,7 @@ export default function Page() {
     }
 
     const TestCard = ({ test, isActive = false }: { test: Test; isActive?: boolean }) => (
-        <div className={`relative bg-slate-800 rounded-2xl shadow-2xl hover:shadow-green-500/10 transition-all duration-300 border border-slate-700 overflow-hidden group transform hover:scale-105 ${
+        <div className={`relative bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 overflow-hidden group transition-all duration-300 hover:shadow-green-500/10 hover:border-green-500/30 ${
             isActive ? 'ring-2 ring-green-500 ring-opacity-50' : ''
         }`}>
             {/* Status indicator */}
@@ -186,16 +191,33 @@ export default function Page() {
                     </div>
                 </div>
 
-                {/* Action Button */}
+                {/* FIXED: Action Button with no continuous animation */}
                 {isActive && (
                     <button
                         onClick={() => handleTakeTest(test._id)}
                         disabled={takenTests.includes(test._id)}
-                        className={`w-full py-3 px-6 rounded-xl font-semibold text-white transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-opacity-50 ${
-                            takenTests.includes(test._id)
-                                ? 'bg-slate-600 cursor-not-allowed opacity-75'
-                                : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow-xl hover:shadow-green-500/30 focus:ring-green-300'
-                        }`}
+                        className={`
+                            w-full py-3 px-6 rounded-xl font-semibold text-white 
+                            transition-all duration-200 ease-in-out
+                            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800
+                            ${takenTests.includes(test._id)
+                                ? 'bg-slate-600 cursor-not-allowed opacity-75 focus:ring-slate-400'
+                                : `bg-gradient-to-r from-green-500 to-green-600 
+                                   hover:from-green-600 hover:to-green-700 
+                                   hover:shadow-lg hover:shadow-green-500/25
+                                   active:scale-95 active:shadow-inner
+                                   focus:ring-green-400`
+                            }
+                        `}
+                        style={{
+                            // CRITICAL: Prevent any inherited animations
+                            animation: 'none',
+                            transform: 'none'
+                        }}
+                        onMouseEnter={(e) => {
+                            // Ensure no conflicting styles
+                            e.currentTarget.style.animation = 'none';
+                        }}
                     >
                         {takenTests.includes(test._id) ? (
                             <div className="flex items-center justify-center">
@@ -219,26 +241,38 @@ export default function Page() {
     );
 
     return (
-        <div className="min-h-screen bg-slate-900 relative overflow-hidden">
-            {/* Green spotlight background */}
-            <div className="absolute inset-0 bg-gradient-radial from-green-500/20 via-green-500/10 to-transparent"></div>
+        <div className="min-h-screen relative overflow-hidden" 
+             style={{ 
+                backgroundColor: '#0f172a',
+                backgroundImage: 'radial-gradient(ellipse 80% 80% at 50% -20%, rgba(75, 181, 67, 0.3), rgba(15, 23, 42, 0))',
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
+             }}>
             
-            {/* Professional Dark Header with Enhanced Green Spotlight */}
-            <header className="relative bg-slate-900 border-b border-green-500/20 shadow-2xl">
-                <div className="absolute inset-0 bg-gradient-radial from-green-500/30 via-green-500/15 to-transparent"></div>
+            {/* Professional Dark Header */}
+            <header className="relative bg-slate-900/20 border-b border-green-500/20 shadow-2xl backdrop-blur-sm">
                 <div className="relative z-10 container mx-auto px-4 py-12">
-                    <div className="text-center animate-fade-in">
+                    <div className="text-center">
                         <div className="flex items-center justify-center mb-6">
-                            <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-xl flex items-center justify-center mr-4 shadow-lg shadow-green-500/30">
+                            <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-xl flex items-center justify-center mr-4 shadow-lg shadow-green-500/30"
+                                 style={{ filter: 'drop-shadow(0 5px 15px rgba(0, 0, 0, 0.2))' }}>
                                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
                             </div>
-                            <h1 className="text-4xl sm:text-5xl font-mono text-white drop-shadow-2xl ">
+                            <h1 className="text-4xl sm:text-5xl font-bold text-white" 
+                                style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.4)' }}>
                                 GATE STUDENT DASHBOARD 
                             </h1>
                         </div>
-                        <p className="text-xl text-slate-300 max-w-2xl mx-auto drop-shadow-lg">
+                        <p className="text-xl max-w-2xl mx-auto"
+                           style={{ 
+                            color: '#07c63d',
+                            fontSize: '20px',
+                            fontWeight: '700',
+                            fontStyle: 'italic',
+                            textShadow: '1px 1px 2px rgba(0, 0, 0, 0.1)',
+                            letterSpacing: '0.5px'
+                           }}>
                             Your gateway to success — practice, perform, and progress.
                         </p>
                     </div>
@@ -249,9 +283,11 @@ export default function Page() {
                 {/* Active Tests Section */}
                 <section className="mb-16">
                     <div className="flex items-center mb-8">
-                        <div className="w-1 h-8 bg-green-500 rounded-full mr-4 shadow-lg shadow-green-500/50"></div>
-                        <h2 className="text-3xl font-bold text-white drop-shadow-lg">Active Examinations</h2>
-                        <div className="ml-auto flex items-center text-sm text-slate-400">
+                        <div className="w-1 h-8 rounded-full mr-4 shadow-lg"
+                             style={{ backgroundColor: '#4bb543', boxShadow: '0 0 15px rgba(75, 181, 67, 0.5)' }}></div>
+                        <h2 className="text-3xl font-bold text-white" 
+                            style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.4)' }}>Active Examinations</h2>
+                        <div className="ml-auto flex items-center text-sm" style={{ color: '#a0aec0' }}>
                             <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
                             <span>Live Tests Available</span>
                         </div>
@@ -262,12 +298,13 @@ export default function Page() {
                             <div className="col-span-full">
                                 <div className="text-center py-20 bg-slate-800/50 backdrop-blur-sm rounded-2xl shadow-2xl border border-slate-700">
                                     <div className="w-20 h-20 bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-6">
-                                        <svg className="w-10 h-10 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg className="w-10 h-10" style={{ color: '#a0aec0' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                         </svg>
                                     </div>
-                                    <h3 className="text-xl font-semibold text-white mb-2">No Active Tests</h3>
-                                    <p className="text-slate-400">Currently no examinations are available for participation</p>
+                                    <h3 className="text-xl font-semibold text-white mb-2" 
+                                        style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.4)' }}>No Active Tests</h3>
+                                    <p style={{ color: '#a0aec0' }}>Currently no examinations are available for participation</p>
                                 </div>
                             </div>
                         ) : (
@@ -281,9 +318,11 @@ export default function Page() {
                 {/* Upcoming Tests Section */}
                 <section>
                     <div className="flex items-center mb-8">
-                        <div className="w-1 h-8 bg-green-500 rounded-full mr-4 shadow-lg shadow-green-500/50"></div>
-                        <h2 className="text-3xl font-bold text-white drop-shadow-lg">Scheduled Examinations</h2>
-                        <div className="ml-auto flex items-center text-sm text-slate-400">
+                        <div className="w-1 h-8 rounded-full mr-4 shadow-lg"
+                             style={{ backgroundColor: '#4bb543', boxShadow: '0 0 15px rgba(75, 181, 67, 0.5)' }}></div>
+                        <h2 className="text-3xl font-bold text-white" 
+                            style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.4)' }}>Scheduled Examinations</h2>
+                        <div className="ml-auto flex items-center text-sm" style={{ color: '#a0aec0' }}>
                             <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
                             <span>Upcoming Tests</span>
                         </div>
@@ -294,12 +333,13 @@ export default function Page() {
                             <div className="col-span-full">
                                 <div className="text-center py-20 bg-slate-800/50 backdrop-blur-sm rounded-2xl shadow-2xl border border-slate-700">
                                     <div className="w-20 h-20 bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-6">
-                                        <svg className="w-10 h-10 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg className="w-10 h-10" style={{ color: '#a0aec0' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4m4 0v10a2 2 0 01-2 2H6a2 2 0 01-2-2V7a2 2 0 012 2h12a2 2 0 012 2z" />
                                         </svg>
                                     </div>
-                                    <h3 className="text-xl font-semibold text-white mb-2">No Scheduled Tests</h3>
-                                    <p className="text-slate-400">All examinations are up to date</p>
+                                    <h3 className="text-xl font-semibold text-white mb-2" 
+                                        style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.4)' }}>No Scheduled Tests</h3>
+                                    <p style={{ color: '#a0aec0' }}>All examinations are up to date</p>
                                 </div>
                             </div>
                         ) : (

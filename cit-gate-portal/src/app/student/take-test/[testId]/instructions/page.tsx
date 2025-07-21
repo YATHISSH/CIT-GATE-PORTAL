@@ -24,7 +24,7 @@ const InstructionsPage: React.FC<InstructionsPageProps> = ({ params }) => {
   const handleStartTest = () => {
     setIsLoading(true);
     setTimeout(() => {
-      router.push(`/student/take-test/${testId}`);
+      router.replace(`/student/take-test/${testId}`);
     }, 1000);
   };
 
