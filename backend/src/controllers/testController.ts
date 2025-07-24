@@ -539,6 +539,7 @@ export const getAllTests = async (req: AuthRequest, res: Response) => {
         query = { department };
       }
     }
+    
 
     const tests = await Test.find(query)
       .sort({ startTime: -1 })
