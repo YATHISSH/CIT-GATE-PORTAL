@@ -46,5 +46,17 @@ export const useTimer = (test: Test | null, onTimeEnd: () => void) => {
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  return { timeRemaining, testStatus, formatTime };
+  // Helper function to get time in seconds
+  const getTimeInSeconds = () => Math.floor(timeRemaining / 1000);
+
+  // Check if time is critical (last 30 seconds)
+  const isCriticalTime = testStatus === 'active' && getTimeInSeconds() <= 30;
+
+  return { 
+    timeRemaining, 
+    testStatus, 
+    formatTime, 
+    getTimeInSeconds, 
+    isCriticalTime 
+  };
 };
