@@ -325,9 +325,9 @@ const TeacherResultsPage: React.FC = () => {
         'Test Started': formatDate(attempt.startTime),
         'Test Ended': formatDate(attempt.endTime),
         'Submitted At': formatDate(attempt.submittedAt),
-        'Attempt Number': attempt.attemptNumber,
-        'Auto Submitted': attempt.isAutoSubmitted ? 'Yes' : 'No',
-        'Warning Count': attempt.warningCount,
+        // 'Attempt Number': attempt.attemptNumber,
+        // 'Auto Submitted': attempt.isAutoSubmitted ? 'Yes' : 'No',
+        // 'Warning Count': attempt.warningCount,
         
         // Technical & Security Info
         'IP Address': attempt.ipAddress,
