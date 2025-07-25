@@ -333,8 +333,8 @@ const TeacherResultsPage: React.FC = () => {
         'IP Address': attempt.ipAddress,
         'User Agent': attempt.userAgent,
         'Browser Info': attempt.metadata.browserInfo,
-        'Screen Resolution': attempt.metadata.screenResolution,
-        'Timezone': attempt.metadata.timezone
+        // 'Screen Resolution': attempt.metadata.screenResolution,
+        // 'Timezone': attempt.metadata.timezone
       };
     });
     
@@ -720,6 +720,20 @@ const DoughnutChart = ({ data }: { data: any[] }) => {
 
         .download-btn {
           background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+          color: white;
+          border: none;
+          border-radius: 12px;
+          padding: 0.75rem 1.5rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+        }
+         .download-btn-gradient {
+          background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%) !important;
           color: white;
           border: none;
           border-radius: 12px;
@@ -1267,16 +1281,9 @@ const DoughnutChart = ({ data }: { data: any[] }) => {
                       Download Excel
                     </button>
                   )}
-                  {/* <Link href="/teacher" className="dashboard-link-btn">
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-  </svg>
-  Back to Dashboard
-</Link> */}
               <button 
                 onClick={() => router.push('/teacher')} 
-                className="download-btn !bg-gradient-to-r !from-blue-500 !to-blue-700 hover:!from-blue-600 hover:!to-blue-800 hover:!shadow-blue-500/40 focus:!ring-blue-500/30 active:!from-blue-700 active:!to-blue-600 !shadow-blue-500/30"
-              >
+                className="download-btn-gradient custom-blue-gradient hover:!shadow-blue-500/40 focus:!ring-blue-500/30 active:!from-blue-700 active:!to-blue-600 !shadow-blue-500/30">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
